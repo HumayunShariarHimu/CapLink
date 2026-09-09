@@ -109,7 +109,11 @@ app.get('/api/qr/:shortCode', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`CapLink server running on port ${PORT}`);
-});
+// Start a local server only when running outside Vercel.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`CapLink server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

@@ -7,6 +7,11 @@ const QRCode = require('qrcode');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+function publicOrigin(req) {
+  const configured = process.env.PUBLIC_BASE_URL || 'https://caplinking.vercel.app';
+  return configured.replace(/\/$/, '') || `${req.protocol}://${req.get('host')}`;
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -62,7 +67,7 @@ app.post('/api/shorten', (req, res) => {
 
     res.json({
       shortCode,
-      shortUrl: `${req.protocol}://${req.get('host')}/${shortCode}`,
+      shortUrl: `${publicOrigin(req)}/${shortCode}`,
       originalUrl,
       expiryDate: expiryDate ? expiryDate.toISOString() : null,
       createdAt: newLink.createdAt,
@@ -106,7 +111,7 @@ app.get('/api/qr/:shortCode', async (req, res) => {
   const link = links.find(l => l.shortCode === shortCode);
   if (!link) return res.status(404).json({ error: 'Link not found' });
 
-  const url = `${req.protocol}://${req.get('host')}/${shortCode}`;
+  const url = `${publicOrigin(req)}/${shortCode}`;
   try {
     const qrBuffer = await QRCode.toBuffer(url, { type: 'png', margin: 1 });
     res.set('Content-Type', 'image/png');

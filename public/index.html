@@ -923,7 +923,7 @@
                             <div class="form-group flex-2">
                                 <label for="customSlug">Custom Alias (optional)</label>
                                 <div class="input-prefix">
-                                    <span class="prefix-text">caplink.to/</span>
+                                    <span class="prefix-text">caplinking.vercel.app/</span>
                                     <input type="text" id="customSlug" placeholder="my-brand" pattern="[a-zA-Z0-9_-]+" title="Letters, numbers, underscore, and hyphen only" />
                                 </div>
                             </div>
@@ -1169,7 +1169,7 @@
                     return `
                         <div class="link-item">
                             <div class="link-info">
-                                <a href="#" class="link-short" data-code="${link.shortCode}">caplink.to/${link.shortCode}</a>
+                                <a href="#" class="link-short" data-code="${link.shortCode}">${window.location.origin}/${link.shortCode}</a>
                                 <div class="link-original" title="${escapeHtml(link.originalUrl)}">${escapeHtml(link.originalUrl)}</div>
                             </div>
                             <div class="link-meta">
@@ -1266,7 +1266,7 @@
 
                 // show result
                 currentShortCode = shortCode;
-                const shortUrl = 'caplink.to/' + shortCode;
+                const shortUrl = window.location.origin + '/' + shortCode;
                 shortUrlInput.value = shortUrl;
                 originalDisplay.value = originalUrl;
                 shortCodeSpan.textContent = shortCode;

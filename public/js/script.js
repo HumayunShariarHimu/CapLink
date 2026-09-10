@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         linkList.innerHTML = links.map(link => `
             <div class="link-item">
                 <div class="link-info">
-                    <a href="/${link.shortCode}" target="_blank" class="link-short">caplink.to/${link.shortCode}</a>
+                    <a href="/${link.shortCode}" target="_blank" class="link-short">${window.location.origin}/${link.shortCode}</a>
                     <div class="link-original" title="${link.originalUrl}">${link.originalUrl}</div>
                 </div>
                 <div class="link-meta">

@@ -1068,6 +1068,7 @@
 
             let currentShortCode = '';
             let toastTimer = null;
+            const submitLabel = submitBtn.textContent;
 
             // ── STORE KEY ──
             const STORE_KEY = 'caplink_links';
@@ -1216,7 +1217,7 @@
             }
 
             // ── SUBMIT FORM ──
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 const originalUrl = originalUrlInput.value.trim();
@@ -1236,59 +1237,47 @@
                 const customSlug = customSlugInput.value.trim();
                 const expiryDays = parseInt(expiryDaysSelect.value, 10);
 
-                // generate short code
-                const shortCode = generateShortCode(customSlug);
-                if (!shortCode) {
-                    showToast('Unable to generate a unique short code', true);
-                    return;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating…';
+                try {
+                    const response = await fetch('/api/shorten', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ originalUrl, customSlug, expiryDays })
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Could not create short link');
+
+                    const shortCode = result.shortCode;
+                    const now = result.createdAt || new Date().toISOString();
+                    const expiryDate = result.expiryDate || null;
+                    const links = getLinks().filter(link => link.shortCode !== shortCode);
+                    links.push({ shortCode, originalUrl: result.originalUrl || originalUrl, createdAt: now, expiryDate, clicks: 0 });
+                    saveLinks(links);
+
+                    currentShortCode = shortCode;
+                    shortUrlInput.value = result.shortUrl || (window.location.origin + '/' + shortCode);
+                    originalDisplay.value = originalUrl;
+                    shortCodeSpan.textContent = shortCode;
+                    clickCountSpan.textContent = '0';
+                    createdAtSpan.textContent = formatDate(now);
+                    expiresAtSpan.textContent = expiryDate ? formatDate(expiryDate) : 'Never';
+                    visitLink.href = shortUrlInput.value;
+                    visitLink.removeAttribute('data-code');
+                    resultSection.classList.remove('hidden');
+                    qrContainer.classList.add('hidden');
+                    originalUrlInput.value = '';
+                    customSlugInput.value = '';
+                    expiryDaysSelect.value = '0';
+                    showToast('Link created successfully!');
+                    renderLinks();
+                    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (error) {
+                    showToast(error.message || 'Could not create short link', true);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = submitLabel;
                 }
-
-                const now = new Date().toISOString();
-                const expiryDate = getExpiryDate(expiryDays);
-
-                const newLink = {
-                    shortCode: shortCode,
-                    originalUrl: originalUrl,
-                    createdAt: now,
-                    expiryDate: expiryDate,
-                    clicks: 0
-                };
-
-                const links = getLinks();
-                // check duplicate custom slug
-                if (customSlug && links.some(function(l) { return l.shortCode === customSlug; })) {
-                    showToast('This custom alias is already taken', true);
-                    return;
-                }
-
-                links.push(newLink);
-                saveLinks(links);
-
-                // show result
-                currentShortCode = shortCode;
-                const shortUrl = window.location.origin + '/' + shortCode;
-                shortUrlInput.value = shortUrl;
-                originalDisplay.value = originalUrl;
-                shortCodeSpan.textContent = shortCode;
-                clickCountSpan.textContent = '0';
-                createdAtSpan.textContent = formatDate(now);
-                expiresAtSpan.textContent = expiryDate ? formatDate(expiryDate) : 'Never';
-                visitLink.href = '#';
-                // store the code for visit
-                visitLink.setAttribute('data-code', shortCode);
-                resultSection.classList.remove('hidden');
-                qrContainer.classList.add('hidden');
-
-                // clear form
-                originalUrlInput.value = '';
-                customSlugInput.value = '';
-                expiryDaysSelect.value = '0';
-
-                showToast('Link created successfully!');
-                renderLinks();
-
-                // scroll to result
-                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
             // ── VISIT LINK ──
